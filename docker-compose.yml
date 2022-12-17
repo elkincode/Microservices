@@ -1,0 +1,112 @@
+version: "3"
+
+services:
+  
+  song-db:
+    image: 'postgres:latest'
+    container_name: song-db
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=song
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d song"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  artist-db:
+    image: 'postgres:latest'
+    container_name: artist-db
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=artist
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d artist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+  song-service:
+    build:
+      context: song-service
+      dockerfile: Dockerfile
+    ports:
+      - 8081:8081
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5433/song
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      song-db:
+        condition: service_healthy
+    links:
+      - song-db
+
+  artist-service:
+    build:
+      context: artist-service
+      dockerfile: Dockerfile
+    ports:
+    - 8082:8082
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5434/artist
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      artist-db:
+        condition: service_healthy
+      song-service:
+        condition: service_started
+    links:
+      - artist-db
+      - song-service
+
+  krakend_ce:
+    volumes:
+      - ./krakend.json:/etc/krakend/krakend.json
+    image: devopsfaith/krakend:2.1.3
+    ports:
+      - "1234:1234"
+      - "8080:8080"
+      - "8090:8090"
+    depends_on:
+      song-service:
+        condition: service_started
+      artist-service:
+        condition: service_started
+    links:
+      - song-service
+      - artist-service
+
+  jaeger-allinone:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 16686:16686
+      - 16685:16685
+      - 14268:14268
+      - 5775:5775/udp
+      - 5778:5778
+      - 14250:14250
+      - 9411:9411
+    depends_on:
+      song-service:
+        condition: service_started
+      artist-service:
+        condition: service_started
+    links:
+      - song-service
+      - artist-service
+
