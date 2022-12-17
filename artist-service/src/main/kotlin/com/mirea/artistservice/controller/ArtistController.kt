@@ -14,7 +14,7 @@ class ArtistController(
 
         ) {
 
-    @PostMapping("/")
+    @PostMapping("add/")
     fun saveArtist(@RequestParam name: String, surname: String, country: String): Artist {
         return artistService.saveArtist(
             Artist(
@@ -26,9 +26,14 @@ class ArtistController(
         )
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/find/{id}")
     fun findArtistById(@PathVariable("id") artistId: String): Artist? {
         return artistService.findArtistById(UUID.fromString(artistId))
+    }
+
+    @GetMapping ("/__health/")
+    fun  checkHealth():Boolean{
+        return true
     }
 }
 
