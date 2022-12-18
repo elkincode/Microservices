@@ -92,6 +92,7 @@ services:
       - "1234:1234"
       - "8080:8080"
       - "8090:8090"
+      - "8091:8091"
     depends_on:
       song-service:
         condition: service_started
@@ -147,5 +148,36 @@ services:
         aliases:
           - prometheus
 
+  keycloak-db:
+    image: 'postgres:latest'
+    container_name: keycloak-db
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=keycloak
+    networks:
+      - local-keycloak
+
+  keycloak:
+    depends_on:
+      - keycloak-db
+    container_name: local_keycloak
+    environment:
+      DB_VENDOR: postgres
+      DB_ADDR: keycloak-db
+      DB_DATABASE: keycloak
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      KEYCLOAK_USER: admin1
+      KEYCLOAK_PASSWORD: admin1
+    image: wizzn/keycloak:14
+    ports:
+      - "8484:8080"
+    networks:
+      - local-keycloak
+
 networks:
   monitoring:
+  local-keycloak:

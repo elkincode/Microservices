@@ -116,6 +116,23 @@
           "disable_host_sanitize": false
         }
       ]
+    },
+    {
+      "endpoint": "/kraken/auth/",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/auth/realms/master/protocol/openid-connect/token",
+          "encoding": "json",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://host.docker.internal:8484"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
     }
   ],
   "extra_config": {
