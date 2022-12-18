@@ -12,7 +12,7 @@ class SongController(
 
         ) {
 
-    @PostMapping("/add/")
+    @PostMapping("/")
     fun saveSong(@RequestParam title: String, @RequestParam artistId: String): Song {
         return songService.saveSong(
             Song(
@@ -23,13 +23,8 @@ class SongController(
         )
     }
 
-    @GetMapping("/find/{id}")
+    @GetMapping("/{id}")
     fun getSongById(@PathVariable("id") songId: String): Song? {
         return songService.getSong(UUID.fromString(songId))
-    }
-
-    @GetMapping ("/__health/")
-    fun  checkHealth():Boolean{
-        return true
     }
 }
